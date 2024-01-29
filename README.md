@@ -11,7 +11,7 @@ Complexity: $O(n\sigma)$. More in detail: $O(n)$ for constructing SA and LCP arr
 
 ### Algorithm
 
-For every character $c$, focus on the $c$-run borders of $BWT(rev(T))$, i.e. positions $i$ such that $BWT[i-1,i] = xc$ or $BWT[i-1,i] = cx$ ($x \neq c$). Let $LCP[l,...,r]$ be the maximal substring of the LCP with $l \leq i \leq r$ such that $LCP[l,...,r] \geq LCP[i]$. If $BWT[l,...,r]$ does not contain another $c$-run border $BWT[j-1,j]$ such that $LCP[j]>LCP[i]$, then the text position corresponding to $i$ or $i-1$ (the one containing $c$ in the BWT) is inserted in the suffixient set.
+For every character $c$, focus on the $c$-run borders of $BWT(rev(T))$, i.e. positions $i$ such that $BWT[i-1,i] = xc$ or $BWT[i-1,i] = cx$ ($x \neq c$). Let $LCP[l,...,r]$ be the maximal substring of LCP(rev(T)) with $l \leq i \leq r$ such that $LCP[l,...,r] \geq LCP[i]$. If $BWT[l-1,...,r]$ does not contain another $c$-run border $BWT[j-1,j]$ such that $LCP[j]>LCP[i]$, then the text position corresponding to $i$ or $i-1$ (the one containing $c$ in the BWT) is inserted in the suffixient set.
 
 Why does it work? w.l.o.g., assume $BWT[i-1,i]=xc$. If BWT position $i$ is inserted in the suffixient set, this testifies a right-maximal string $X$ of length $LCP[i]$ having right extension $c$ (i.e. $X\cdot c$ appears in the text). Moreover, the above conditions guarantee that no other right-maximal string $Y$ has an extension $Y\cdot c$ such that $X.c$ suffixes $Y.c$. This can be proved to give the smallest suffixient set because, intuitively, every suffixient set must have such a position $i'$ associated with string $X.c$.
 
