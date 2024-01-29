@@ -110,6 +110,21 @@ int main(int argc, char** argv){
 	vector<lcp_maxima> r_ext(sigma,{-1,0,true}); //vector with candidate suffixient right-extensions
 	vector<uint64_t> suffixient;
 
+
+	/*
+	* Algorithm: for every character C, focus on the BWT(rev(T)) C-run borders, i.e. positions
+	* i such that BWT[i-1,i] = xC or BWT[i-1,i] = Cx (x \neq C). Let LCP[l,...,r] be the maximal
+	* substring of LCP with l <= i <= r such that LCP[l,...,r] >= LCP[i]. If BWT[l,...,r] does not 
+	* contain another C-run border BWT[j-1,j] such that LCP[j]>LCP[i], then the text position
+	* corresponding to i or i-1 (the one containing C in the BWT) is in the suffixient set.
+	*
+	* Why does it work? w.l.o.g., assume BWT[i-1,i]=xC. If BWT position i is inserted in the
+	* suffixient set, this testifies a right-maximal string X of length LCP[i] having right extension 
+	* C (i.e. X.C appears in the text). Moreover, the above conditions guarantee that no other 
+	* extension Y.C of another right-maximal string Y is such that X.C suffixes Y.C. This can be
+	* proved to give the smallest suffixient set.
+	*/
+
 	//main algorithm: compute suffixient-nexessary set by scanning SA, LCP, and BWT
 	for(uint64_t i=1;i<N;++i){
 
