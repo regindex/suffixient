@@ -11,8 +11,6 @@
 using namespace std;
 using namespace sdsl;
 
-static constexpr int64_t null = -1;
-
 struct lcp_maxima{
 	int64_t lcp;
 	uint64_t text_pos;
@@ -27,7 +25,9 @@ void help(){
 	"Options:" << endl <<
 	"-h          Print usage info." << endl << 
 	"-o <arg>    Store output to file using 64-bits unsigned integers. If not specified, output is streamed to standard output in human-readable format." << endl <<
-	"-s          Sort output. Default: false." << endl;
+	"-s          Sort output. Default: false." << endl <<
+	"-p          Print to standard output size of suffixient set. Default: false." << endl <<
+	"-r          Print to standard output number of equal-letter runs in the BWT of reverse text. Default: false." << endl;
 	exit(0);
 }
 
@@ -38,9 +38,11 @@ int main(int argc, char** argv){
 	string output_file;
 
 	bool sort=false;
+	bool rho=false;
+	bool runs=false;
 
 	int opt;
-	while ((opt = getopt(argc, argv, "sho:")) != -1){
+	while ((opt = getopt(argc, argv, "prsho:")) != -1){
 		switch (opt){
 			case 'h':
 				help();
@@ -50,6 +52,12 @@ int main(int argc, char** argv){
 			break;
 			case 's':
 				sort=true;
+			break;
+			case 'p':
+				rho=true;
+			break;
+			case 'r':
+				runs=true;
 			break;
 			default:
 				help();
@@ -63,6 +71,8 @@ int main(int argc, char** argv){
 	cache_config cc;
 	uint64_t N = 0; //including 0x0 terminator
 	uint8_t sigma = 1; // alphabet size (including terminator 0x0)
+
+	uint64_t bwtruns=0;
 
 	{
 		string in;
@@ -109,7 +119,7 @@ int main(int argc, char** argv){
 	uint8_t bwt_prev = T[N-2]; //previous BWT character
 	uint64_t t_pos_prev = 0; // position in the original text (before reversing) corresponding to bwt_prev
 
-	vector<lcp_maxima> r_ext(sigma,{null,0,true}); //vector with candidate suffixient right-extensions
+	vector<lcp_maxima> r_ext(sigma,{-1,0,true}); //vector with candidate suffixient right-extensions
 	vector<uint64_t> suffixient;
 
 	//main algorithm: compute suffixient-nexessary set by scanning SA, LCP, and BWT
@@ -120,16 +130,19 @@ int main(int argc, char** argv){
 
 		if(bwt_curr != bwt_prev){//BWT run break: found right-maximal string of length LCP[i]
 
-			if(LCP[i] > r_ext[bwt_prev].lcp) r_ext[bwt_prev] = {int64_t(LCP[i]),t_pos_prev,false};
-			if(LCP[i] > r_ext[bwt_curr].lcp) r_ext[bwt_curr] = {int64_t(LCP[i]),t_pos_curr,false};		
+			bwtruns++;
+
+			if(int64_t(LCP[i]) > r_ext[bwt_prev].lcp) r_ext[bwt_prev] = {int64_t(LCP[i]),t_pos_prev,false};
+			if(int64_t(LCP[i]) > r_ext[bwt_curr].lcp) r_ext[bwt_curr] = {int64_t(LCP[i]),t_pos_curr,false};		
 
 		}
 
 		for(uint8_t c = 0; c<sigma;++c){
 
-			if(LCP[i] < r_ext[c].lcp){
+			if(int64_t(LCP[i]) < r_ext[c].lcp){
 
-				if(not r_ext[c].saved)
+				//do not save the position of the terminator
+				if(not r_ext[c].saved and r_ext[c].text_pos != N-1)
 					suffixient.push_back(r_ext[c].text_pos);
 
 				r_ext[c] = {int64_t(LCP[i]),0,true};
@@ -152,8 +165,6 @@ int main(int argc, char** argv){
 
 	}	
 
-	//cout << endl;
-
 	sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
 	sdsl::remove(cache_file_name(conf::KEY_SA, cc));
 
@@ -165,8 +176,16 @@ int main(int argc, char** argv){
 		cout << endl;
 
 	}else{
-		//TO DO store to file
+
+		uint64_t size = suffixient.size();
+		ofstream ofs(output_file, ios::binary);
+		ofs.write((char*)&size, sizeof(size));
+		ofs.write((char*)suffixient.data(), sizeof(uint64_t)*size);
+		
 	}
+
+	if(rho) cout << "Size of smallest suffixient set: " << suffixient.size() << endl;
+	if(runs) cout << "Number of equal-letter BWT(rev(T)) runs: " << bwtruns << endl;
 
 }
 

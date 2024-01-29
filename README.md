@@ -37,6 +37,14 @@ cat text.txt | suffixient
 
 then the output set is streamed to standard output in human-readable format.
 
+type
+
+~~~~
+suffixient -h
+~~~~
+
+for more options. The tool allows also sorting the output and printing the size of the smallest suffixient set and the number of runs in the BWT of the reverse text.
+
 ### Funding
 
 This project has received funding from the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme, project REGINDEX, grant agreement No 101039208
