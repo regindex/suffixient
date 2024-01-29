@@ -6,6 +6,8 @@ Let $T[1..n]$ be a text. A set $`S \subseteq \{1,\dots,n\}`$ is $suffixient$ if,
 
 We say that a suffixient set is also $nexessary$ if no position can be removed from it without losing the suffixient property. This code computes the smallest suffixient-nexessary set of a string.
 
+Complexity: $O(n\sigma)$. More in detail: $O(n)$ for constructing SA and LCP arrays, then $O(n\sigma)$ time in one pass of those arrays (so very cache efficient).
+
 ### Install
 
 ~~~~

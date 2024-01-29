@@ -46,8 +46,11 @@ int main(int argc, char** argv){
 	cache_config cc;
 	uint64_t N = 0; //including 0x0 terminator
 
+	vector<uint8_t> A; // alphabet
+
 	{
 		string in;
+		set<uint8_t> A_set;
 		getline(cin,in,char(0));
 		N = in.size()+1;
 
@@ -55,7 +58,11 @@ int main(int argc, char** argv){
 		
 		for(uint64_t i=0;i<N-1;++i){
 			T[i] = (uint8_t)in[i];
+			A_set.insert(T[i]);
 		}
+
+		A_set.insert(0);
+		A.insert(A.end(), A_set.begin(), A_set.end());
 
 		append_zero_symbol(T);
 		store_to_cache(T, conf::KEY_TEXT, cc);
@@ -69,7 +76,8 @@ int main(int argc, char** argv){
 	for(int i=0;i<N;++i) cout << SA[i] << endl;
 	*/
 
-	
+	for(auto c:A) cout << char(c) <<endl;
+
 
 	sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
 	sdsl::remove(cache_file_name(conf::KEY_SA, cc));
