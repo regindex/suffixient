@@ -2,13 +2,9 @@
 
 ### Overview
 
-Let $T[1..n]$ be a text. A set $S \subseteq {1,\dots,n}$ is $suffixient$ if any one-character extension $X\cdot a$ (string $X$ concatenated with character $a$) of any right-maximal substring $X$ of $T$ is a suffix of $T[1..i]$, for at least one position $i \in S$.
+Let $T[1..n]$ be a text. A set $S \subseteq \{1,\dots,n\}$ is $suffixient$ if, for any one-character extension $X\cdot a$ (string $X$ concatenated with character $a$) of any right-maximal substring $X$ of $T$, there exists $i \in S$ such that $X\cdot a$ is a suffix of $T[1..i]$.
 
 We say that a suffixient set is also $nexessary$ if no position can be removed from it without losing the suffixient property. This code computes the smallest suffixient-nexessary set of a string.
-
-### Funding
-
-This project has received funding from the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme, project REGINDEX, grant agreement No 101039208
 
 ### Install
 
@@ -38,3 +34,7 @@ cat text.txt | suffixient
 ~~~~
 
 then the output set is streamed to standard output in human-readable format.
+
+### Funding
+
+This project has received funding from the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme, project REGINDEX, grant agreement No 101039208
