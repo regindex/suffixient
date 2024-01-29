@@ -37,7 +37,7 @@ cat text.txt | suffixient
 
 then the output set is streamed to standard output in human-readable format.
 
-type
+Type
 
 ~~~~
 suffixient -h

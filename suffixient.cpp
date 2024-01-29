@@ -20,7 +20,7 @@ struct lcp_maxima{
 void help(){
 
 	cout << "suffixient [options]" << endl <<
-	"Input: non-empty ASCII file without character 0x0, from standard input. Smallest suffixient-nexessary set." << endl <<
+	"Input: non-empty ASCII file without character 0x0, from standard input. Output: smallest suffixient-nexessary set." << endl <<
 	"Warning: if 0x0 appears, the standard input is read only until the first occurrence of 0x0 (excluded)." << endl <<
 	"Options:" << endl <<
 	"-h          Print usage info." << endl << 
@@ -96,8 +96,6 @@ int main(int argc, char** argv){
 
 		}
 
-		//cout << "sigma = " << int(sigma) << endl;
-
 		append_zero_symbol(T);
 		store_to_cache(T, conf::KEY_TEXT, cc);
 		construct_sa<8>(cc);
@@ -106,16 +104,6 @@ int main(int argc, char** argv){
 		LCP = int_vector_buffer<>(cache_file_name(conf::KEY_LCP, cc));
 	}
 		
-	/*
-	cout << "T = ";
-	for(int i=0;i<N;++i) cout << (T[i]==0 ? int(0) : int(T[i]));
-	cout<< endl << "SA = ";
-	for(int i=0;i<N;++i) cout << SA[i] << " ";
-	cout<< endl << "LCP = ";
-	for(int i=0;i<N;++i) cout << LCP[i] << " ";	
-	cout << endl;
-	*/
-
 	uint8_t bwt_prev = T[N-2]; //previous BWT character
 	uint64_t t_pos_prev = 0; // position in the original text (before reversing) corresponding to bwt_prev
 
@@ -167,6 +155,8 @@ int main(int argc, char** argv){
 
 	sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
 	sdsl::remove(cache_file_name(conf::KEY_SA, cc));
+	sdsl::remove(cache_file_name(conf::KEY_ISA, cc));
+	sdsl::remove(cache_file_name(conf::KEY_LCP, cc));
 
 	if(sort) std::sort(suffixient.begin(),suffixient.end());
 
