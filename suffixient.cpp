@@ -6,15 +6,17 @@
 #include <sdsl/construct.hpp>
 #include <set>
 #include <limits>
+#include<algorithm>
 
 using namespace std;
 using namespace sdsl;
 
-static constexpr uint64_t null = std::numeric_limits<uint64_t>::max();
+static constexpr int64_t null = -1;
 
 struct lcp_maxima{
-	uint64_t lcp;
-	uint8_t bwt_c;
+	int64_t lcp;
+	uint64_t text_pos;
+	bool saved;
 };
 
 void help(){
@@ -24,24 +26,30 @@ void help(){
 	"Warning: if 0x0 appears, the standard input is read only until the first occurrence of 0x0 (excluded)." << endl <<
 	"Options:" << endl <<
 	"-h          Print usage info." << endl << 
-	"-o <arg>    Store output to file using 64-bits unsigned integers. If not specified, output is streamed to standard output in human-readable format." << endl;
+	"-o <arg>    Store output to file using 64-bits unsigned integers. If not specified, output is streamed to standard output in human-readable format." << endl <<
+	"-s          Sort output. Default: false." << endl;
 	exit(0);
 }
 
 int main(int argc, char** argv){
 
-	if(argc>3) help();
+	if(argc>4) help();
 
 	string output_file;
 
+	bool sort=false;
+
 	int opt;
-	while ((opt = getopt(argc, argv, "ho:")) != -1){
+	while ((opt = getopt(argc, argv, "sho:")) != -1){
 		switch (opt){
 			case 'h':
 				help();
 			break;
 			case 'o':
 				output_file = string(optarg);
+			break;
+			case 's':
+				sort=true;
 			break;
 			default:
 				help();
@@ -88,6 +96,7 @@ int main(int argc, char** argv){
 		LCP = int_vector_buffer<>(cache_file_name(conf::KEY_LCP, cc));
 	}
 		
+	/*
 	cout << "T = ";
 	for(int i=0;i<N;++i) cout << (T[i]==0 ? int(0) : int(T[i]));
 	cout<< endl << "SA = ";
@@ -95,31 +104,69 @@ int main(int argc, char** argv){
 	cout<< endl << "LCP = ";
 	for(int i=0;i<N;++i) cout << LCP[i] << " ";	
 	cout << endl;
+	*/
 
 	uint8_t bwt_prev = T[N-2]; //previous BWT character
 	uint64_t t_pos_prev = 0; // position in the original text (before reversing) corresponding to bwt_prev
 
-	vector<lcp_maxima>(sigma,{null,0});
+	vector<lcp_maxima> r_ext(sigma,{null,0,true}); //vector with candidate suffixient right-extensions
+	vector<uint64_t> suffixient;
 
-	int lcp_derivative = 0; //is the lcp stalling (0), increasing (1) or decreasing (-1)?
-
-	//scan SA, LCP, BWT
+	//main algorithm: compute suffixient-nexessary set by scanning SA, LCP, and BWT
 	for(uint64_t i=1;i<N;++i){
 
 		uint8_t bwt_curr = SA[i]==0 ? 0 : T[SA[i]-1]; //current BWT character
 		uint64_t t_pos_curr = N - SA[i] - 1;   // position in the original text (before reversing) corresponding to bwt_curr
 
+		if(bwt_curr != bwt_prev){//BWT run break: found right-maximal string of length LCP[i]
 
+			if(LCP[i] > r_ext[bwt_prev].lcp) r_ext[bwt_prev] = {int64_t(LCP[i]),t_pos_prev,false};
+			if(LCP[i] > r_ext[bwt_curr].lcp) r_ext[bwt_curr] = {int64_t(LCP[i]),t_pos_curr,false};		
 
+		}
+
+		for(uint8_t c = 0; c<sigma;++c){
+
+			if(LCP[i] < r_ext[c].lcp){
+
+				if(not r_ext[c].saved)
+					suffixient.push_back(r_ext[c].text_pos);
+
+				r_ext[c] = {int64_t(LCP[i]),0,true};
+
+			}
+
+		}
+		
 		bwt_prev = bwt_curr;
 		t_pos_prev = t_pos_curr;
 	
 	}
 
+
+	//save residuals right-extensions
+	for(uint8_t c = 0; c<sigma;++c){
+
+		if(not r_ext[c].saved)
+			suffixient.push_back(r_ext[c].text_pos);
+
+	}	
+
 	//cout << endl;
 
 	sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
 	sdsl::remove(cache_file_name(conf::KEY_SA, cc));
+
+	if(sort) std::sort(suffixient.begin(),suffixient.end());
+
+	if(output_file.length()==0){
+
+		for(auto x:suffixient) cout << x << " ";
+		cout << endl;
+
+	}else{
+		//TO DO store to file
+	}
 
 }
 
