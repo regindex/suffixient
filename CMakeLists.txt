@@ -17,7 +17,6 @@ LINK_DIRECTORIES(~/lib)         #SDSL libs
 message("Building in ${CMAKE_BUILD_TYPE} mode")
 
 set(CMAKE_CXX_FLAGS "--std=c++14")
-
 set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g")
 set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -fstrict-aliasing -DNDEBUG")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -ggdb -Ofast -fstrict-aliasing -march=native")
