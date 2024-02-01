@@ -126,7 +126,8 @@ int main(int argc, char** argv){
 	*/
 
 	//main algorithm: compute suffixient-nexessary set by scanning SA, LCP, and BWT
-	for(uint64_t i=1;i<N;++i){
+	uint64_t i=1;
+	while(i<N){
 
 		uint8_t bwt_curr = SA[i]==0 ? 0 : T[SA[i]-1]; //current BWT character
 		uint64_t t_pos_curr = N - SA[i] - 1;   // position in the original text (before reversing) corresponding to bwt_curr
@@ -156,7 +157,8 @@ int main(int argc, char** argv){
 		
 		bwt_prev = bwt_curr;
 		t_pos_prev = t_pos_curr;
-	
+		i++;
+			
 	}
 
 
