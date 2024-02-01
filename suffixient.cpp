@@ -6,10 +6,18 @@
 #include <sdsl/construct.hpp>
 #include <set>
 #include <limits>
-#include<algorithm>
+#include <algorithm>
 
 using namespace std;
 using namespace sdsl;
+
+int_vector<8> T;
+int_vector_buffer<> SA;
+int_vector_buffer<> LCP;
+
+uint8_t bwt(uint64_t i){
+	return SA[i]==0 ? 0 : T[SA[i]-1];
+}
 
 struct lcp_maxima{
 	int64_t lcp;
@@ -30,6 +38,9 @@ void help(){
 	"-r          Print to standard output number of equal-letter runs in the BWT of reverse text. Default: false." << endl;
 	exit(0);
 }
+
+
+
 
 int main(int argc, char** argv){
 
@@ -65,9 +76,6 @@ int main(int argc, char** argv){
 		}
 	}
 
-	int_vector<8> T;
-	int_vector_buffer<> SA;
-	int_vector_buffer<> LCP;
 	cache_config cc;
 	uint64_t N = 0; //including 0x0 terminator
 	uint8_t sigma = 1; // alphabet size (including terminator 0x0)
@@ -103,13 +111,9 @@ int main(int argc, char** argv){
 		SA = int_vector_buffer<>(cache_file_name(conf::KEY_SA, cc));
 		LCP = int_vector_buffer<>(cache_file_name(conf::KEY_LCP, cc));
 	}
-		
-	uint8_t bwt_prev = T[N-2]; //previous BWT character
-	uint64_t t_pos_prev = 0; // position in the original text (before reversing) corresponding to bwt_prev
 
 	vector<lcp_maxima> r_ext(sigma,{-1,0,true}); //vector with candidate suffixient right-extensions
 	vector<uint64_t> suffixient;
-
 
 	/*
 	* Algorithm: for every character C, focus on the BWT(rev(T)) C-run borders, i.e. positions
@@ -127,43 +131,59 @@ int main(int argc, char** argv){
 
 	//main algorithm: compute suffixient-nexessary set by scanning SA, LCP, and BWT
 	uint64_t i=1;
+	
 	while(i<N){
 
-		uint8_t bwt_curr = SA[i]==0 ? 0 : T[SA[i]-1]; //current BWT character
-		uint64_t t_pos_curr = N - SA[i] - 1;   // position in the original text (before reversing) corresponding to bwt_curr
+		int64_t min_lcp = N;
 
-		if(bwt_curr != bwt_prev){//BWT run break: found right-maximal string of length LCP[i]
+		//skip over BWT equal-letter runs; just record the minimum LCP inside the run
+		while(i < N and bwt(i) == bwt(i-1)){
+			min_lcp = min(min_lcp,int64_t(LCP[i]));
+			i++;
+		}
+
+		//here we are either at a run border or past the end of the BWT
+
+		if(min_lcp<N)//if we just scanned a BWT run of length > 1
+			for(uint8_t c = 1; c<sigma;++c)
+				if(min_lcp < r_ext[c].lcp){
+
+					if(not r_ext[c].saved)
+						suffixient.push_back(r_ext[c].text_pos);
+
+					r_ext[c] = {int64_t(LCP[i]),0,true};
+
+				}
+
+		//BWT[i-1,i] is a BWT run
+		if(i<N){
 
 			bwtruns++;
 
-			if(int64_t(LCP[i]) > r_ext[bwt_prev].lcp) r_ext[bwt_prev] = {int64_t(LCP[i]),t_pos_prev,false};
-			if(int64_t(LCP[i]) > r_ext[bwt_curr].lcp) r_ext[bwt_curr] = {int64_t(LCP[i]),t_pos_curr,false};		
+			if(int64_t(LCP[i]) > r_ext[bwt(i-1)].lcp) 
+				r_ext[bwt(i-1)] = {int64_t(LCP[i]),N - SA[i-1] - 1,false};
+			
+			if(int64_t(LCP[i]) > r_ext[bwt(i)].lcp) 
+				r_ext[bwt(i)] = {int64_t(LCP[i]),N - SA[i] - 1,false};		
 
-		}
+			for(uint8_t c = 1; c<sigma;++c)
+				if(int64_t(LCP[i]) < r_ext[c].lcp){
 
-		for(uint8_t c = 0; c<sigma;++c){
+					if(not r_ext[c].saved)
+						suffixient.push_back(r_ext[c].text_pos);
 
-			if(int64_t(LCP[i]) < r_ext[c].lcp){
+					r_ext[c] = {int64_t(LCP[i]),0,true};
 
-				//do not save the position of the terminator
-				if(not r_ext[c].saved and r_ext[c].text_pos != N-1)
-					suffixient.push_back(r_ext[c].text_pos);
-
-				r_ext[c] = {int64_t(LCP[i]),0,true};
-
-			}
+				}
 
 		}
 		
-		bwt_prev = bwt_curr;
-		t_pos_prev = t_pos_curr;
 		i++;
-			
+
 	}
 
-
 	//save residuals right-extensions
-	for(uint8_t c = 0; c<sigma;++c){
+	for(uint8_t c = 1; c<sigma;++c){
 
 		if(not r_ext[c].saved)
 			suffixient.push_back(r_ext[c].text_pos);
