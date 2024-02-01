@@ -6,7 +6,7 @@ Let $T[1..n]$ be a text. A set $`S \subseteq \{1,\dots,n\}`$ is $suffixient$ if,
 
 We say that a suffixient set is also $nexessary$ if no position can be removed from it without losing the suffixient property. This code computes the smallest suffixient-nexessary set of a string.
 
-Complexity: $O(n + r\sigma)$, where $r$ is the number of equal-letter runs in the BWT of the reversed text and $\sigma$ is the alphabet size. More in detail: $O(n)$ for constructing SA and LCP arrays, then $O(n + r\sigma)$ time in one pass of those arrays (so very cache efficient).
+Complexity: $O(n + r\sigma)$, where $r$ is the number of equal-letter runs in the BWT of the reversed text and $\sigma$ is the alphabet size. More in detail: $O(n)$ for constructing SA and LCP arrays, then $O(n + r\sigma)$ time in one pass of those arrays using just $O(\sigma)$ words of additional memory (so very cache efficient).
 
 
 ### Algorithm
