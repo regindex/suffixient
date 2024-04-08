@@ -151,7 +151,7 @@ int main(int argc, char** argv){
 					if(not r_ext[c].saved)
 						suffixient.push_back(r_ext[c].text_pos);
 
-					r_ext[c] = {int64_t(LCP[i]),0,true};
+					r_ext[c] = {min_lcp,0,true};
 
 				}
 
