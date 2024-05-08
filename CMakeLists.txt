@@ -1,27 +1,56 @@
-cmake_minimum_required(VERSION 2.6)
+CMAKE_MINIMUM_REQUIRED(VERSION 3.13)
+set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/CMakeModules")
 
 # Set a default build type if none was specified
+# ------------------------------------------------------------------------------
 if(NOT CMAKE_BUILD_TYPE)
   message(STATUS "Setting build type to 'Release' as none was specified.")
   set(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build." FORCE)
 endif()
 
-#set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/.. )
-
+# About this project
+# ------------------------------------------------------------------------------
 project (suffixient)
+SET(VERSION_MAJOR "0")
+SET(VERSION_MINOR "1")
+SET(VERSION_PATCH "0")
+SET(VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}")
 
-include_directories(${PROJECT_SOURCE_DIR})
-include_directories(~/include)  #SDSL headers
-LINK_DIRECTORIES(~/lib)         #SDSL libs
+#option(COMPILE_BENCHMARKS "Set ON to compile the benchmarks" OFF) To be added what running experiments
 
-message("Building in ${CMAKE_BUILD_TYPE} mode")
+# Set environment
+# ------------------------------------------------------------------------------
+set(CMAKE_INSTALL_PREFIX ${CMAKE_BINARY_DIR}/install)
 
-set(CMAKE_CXX_FLAGS "--std=c++14")
-set(CMAKE_CXX_FLAGS_DEBUG "-O0 -ggdb -g")
-set(CMAKE_CXX_FLAGS_RELEASE "-Ofast -fstrict-aliasing -DNDEBUG")
-set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-g -ggdb -Ofast -fstrict-aliasing -march=native")
+find_package(Git)
+if(GIT_FOUND)
+    message("git found: ${GIT_EXECUTABLE}")
+else()
+    message(WARNING "git not found. Cloning of submodules will not work.")
+endif()
 
-add_executable(suffixient suffixient.cpp)
-TARGET_LINK_LIBRARIES(suffixient sdsl)
-TARGET_LINK_LIBRARIES(suffixient divsufsort)
-TARGET_LINK_LIBRARIES(suffixient divsufsort64)
+# Configure the compiler with the appropriate flags
+# ------------------------------------------------------------------------------
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang" OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "AppleClang")
+  # using Clang
+  message("compiler: configuring Clang compiler")
+  include(ConfigureCompilerClang)
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  # using GCC
+  message("compiler: configuring gcc compiler")
+  include(ConfigureCompilerGcc)
+else ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+  message(FATAL_ERROR "Only the compiler gcc and clang are supported")
+endif()
+
+# Configure thirdparty
+# ------------------------------------------------------------------------------
+set(CMAKE_INSTALL_INCLUDEDIR "include")
+add_subdirectory(thirdparty)
+
+add_subdirectory(sources)
+add_subdirectory(include)
+
+# Set script containing the full pipeline
+# ------------------------------------------------------------------------------
+configure_file(${PROJECT_SOURCE_DIR}/pipeline/run_suffixient ${PROJECT_BINARY_DIR}/run_suffixient)

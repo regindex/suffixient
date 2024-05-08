@@ -15,7 +15,7 @@ For every character $c$, focus on the $c$-run borders of $BWT(rev(T))$, i.e. pos
 
 Why does it work? w.l.o.g., assume $BWT[i-1,i]=xc$. If BWT position $i$ is inserted in the suffixient set, this testifies a right-maximal string $X$ of length $LCP[i]$ having right extension $c$ (i.e. $X\cdot c$ appears in the text). Moreover, the above conditions guarantee that no other right-maximal string $Y$ has an extension $Y\cdot c$ such that $X.c$ suffixes $Y.c$. This can be proved to give the smallest suffixient set because, intuitively, every suffixient set must have such a position $i'$ associated with string $X.c$.
 
-### Install. First of all, install the [sdsl library](https://github.com/simongog/sdsl-lite). Then: 
+### Install
 
 ~~~~
 git clone https://github.com/nicolaprezza/suffixient
@@ -31,13 +31,13 @@ make
 The tool reads its input (a text file) from standard input. If option -o is specified: 
 
 ~~~~
-cat text.txt | ./suffixient -o output
+cat text.txt | sources/suffixient -o output
 ~~~~
 
 or 
 
 ~~~~
-./suffixient -o output < text.txt
+sources/suffixient -o output < text.txt
 ~~~~
 
 then the output set S is stored to file in the following format: one uint64_t storing the size $|S|$ of the set, followed by $|S|$ uint64_t storing the set itself. 
@@ -45,13 +45,13 @@ then the output set S is stored to file in the following format: one uint64_t st
 If option -o is not specified: 
 
 ~~~~
-cat text.txt | suffixient
+cat text.txt | sources/suffixient
 ~~~~
 
 or
 
 ~~~~
-./suffixient < text.txt
+sources/suffixient < text.txt
 ~~~~
 
 then the output set is streamed to standard output in human-readable format.
@@ -59,10 +59,22 @@ then the output set is streamed to standard output in human-readable format.
 Type
 
 ~~~~
-suffixient -h
+sources/suffixient -h
 ~~~~
 
-for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r).
+for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r). Type "sources/suffixient_twopass for using the two pass linear algorithm".
+
+Otherwise, you can run the smallest suffixient set construction for large texts using the PFP algorithm by typing the following command (note that at the moment you need to explicitly invert the text before running the PFP)
+
+~~~~
+python3 run_suffixient rev(text.txt)
+~~~~
+
+for the full list of options, type
+
+~~~~
+python3 run_suffixient -h
+~~~~
 
 ### Funding
 
