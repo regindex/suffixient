@@ -8,5 +8,5 @@ target_compile_options(pfp_suffixient64 PUBLIC -DM64)
 add_executable(one-pass one_pass.cpp)
 target_link_libraries(one-pass common sdsl divsufsort divsufsort64)
 
-add_executable(linear linear_time.cpp)
-target_link_libraries(linear common sdsl divsufsort divsufsort64)
+add_executable(suffixient linear_time.cpp)
+target_link_libraries(suffixient common sdsl divsufsort divsufsort64)

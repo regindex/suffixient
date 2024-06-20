@@ -55,4 +55,4 @@ add_subdirectory(include)
 
 # Set script containing the full pipeline
 # ------------------------------------------------------------------------------
-configure_file(${PROJECT_SOURCE_DIR}/pipeline/run_suffixient.py ${PROJECT_BINARY_DIR}/run_suffixient.py)
+configure_file(${PROJECT_SOURCE_DIR}/pipeline/pfp_suffixient.py ${PROJECT_BINARY_DIR}/pfp_suffixient.py)
