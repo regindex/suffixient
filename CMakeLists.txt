@@ -51,6 +51,8 @@ add_subdirectory(thirdparty)
 add_subdirectory(sources)
 add_subdirectory(include)
 
+#add_subdirectory(experiments)
+
 # Set script containing the full pipeline
 # ------------------------------------------------------------------------------
-configure_file(${PROJECT_SOURCE_DIR}/pipeline/run_suffixient ${PROJECT_BINARY_DIR}/run_suffixient)
+configure_file(${PROJECT_SOURCE_DIR}/pipeline/run_suffixient.py ${PROJECT_BINARY_DIR}/run_suffixient.py)

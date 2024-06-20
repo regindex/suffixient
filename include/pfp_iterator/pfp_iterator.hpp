@@ -1,29 +1,10 @@
-/* pfp_iterator - lcp from prefix free parsing 
-    Copyright (C) 2020 Massimiliano Rossi
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see http://www.gnu.org/licenses/ .
+// Copyright (c) 2024, REGINDEX.  All rights reserved.
+// Use of this source code is governed
+// by a MIT license that can be found in the LICENSE file.
+/*
+    Adapted from a the file "pfp_lcp.hpp" in "https://github.com/maxrossi91/pfp-thresholds"
+    by Missimiliano Rossi 2020.
 */
-/*!
-   \file pfp_iterator.hpp
-   \brief pfp_iterator.hpp define and build the lcp from the prefix-free parsing.
-   \author Massimiliano Rossi
-   \date 01/07/2020
-
-   MODIFICA DEL FILE DI MAX
-*/
-
-// fa tutto tranne il SA completo
 
 #ifndef _PFP_ITERATOR_HH
 #define _PFP_ITERATOR_HH
@@ -38,6 +19,7 @@ extern "C"
 }
 
 #include <pfp.hpp>
+#include <priority_queue.hpp>
 
 class pfp_iterator{
 public:
@@ -49,15 +31,16 @@ public:
                 head(0)
     { assert(pf.dict.d[pf.dict.saD[0]] == EndOfDict); } 
 
-    void operator ++()
+    void process_next_block()
     {
-        while (curr.i < pf.dict.saD.size())
+        while (not is_finished())
         {
             if(is_valid(curr)){
                 // Compute the next character of the BWT of T
-                std::vector<phrase_suffix_t> same_suffix(1, curr);  // Store the list of all phrase ids with the same suffix.
+                // Store the list of all phrase ids with the same suffix.
+                std::vector<phrase_suffix_t> same_suffix(1, curr); 
 
-                phrase_suffix_t next = curr;
+                next = curr;
 
                 while (inc(next) && (pf.dict.lcpD[next.i] >= curr.suffix_length))
                 {
@@ -69,17 +52,9 @@ public:
                     }
                 }
 
-                // Hard case
-                int_t lcp_suffix = compute_lcp_suffix(curr,prev);
+                // compute lcp suffix length
+                lcp_suffix = compute_lcp_suffix(curr,prev);
 
-                typedef std::pair<int_t *, std::pair<int_t *, uint8_t>> pq_t;
-
-                // using lambda to compare elements.
-                auto cmp = [](const pq_t &lhs, const pq_t &rhs) {
-                    return *lhs.first > *rhs.first;
-                };
-
-                std::priority_queue<pq_t, std::vector<pq_t>, decltype(cmp)> pq(cmp);
                 for (auto s: same_suffix)
                 {
                     size_t begin = pf.pars.select_ilist_s(s.phrase + 1);
@@ -87,43 +62,11 @@ public:
                     pq.push({&pf.pars.ilist[begin], {&pf.pars.ilist[end], s.bwt_char}});
                 }
 
-                size_t prev_occ;
-                bool first = true;
-                while (!pq.empty())
-                {
-                    auto curr_occ = pq.top();
-                    pq.pop();
+                assert(pq.size() > 0);
 
-                    if (!first)
-                    {
-                        // Compute the minimum s_lcpP of the the current and previous occurrence of the phrase in BWT_P
-                        lcp_suffix = curr.suffix_length + min_s_lcp_T(*curr_occ.first, prev_occ);
-                    }
-                    first = false;
-                    // Update min_s
-                    // print_lcp(lcp_suffix, j);
-
-                    // update_ssa(curr, *curr_occ.first);
-                    update_lcp(lcp_suffix);
-
-                    update_sa(curr, *curr_occ.first);
-
-                    update_bwt(curr_occ.second.second);
-
-                    // update_esa(curr, *curr_occ.first);
-                    // Update prevs
-                    prev_occ = *curr_occ.first;
-
-                    // Update pq
-                    curr_occ.first++;
-                    if (curr_occ.first != curr_occ.second.first)
-                        pq.push(curr_occ);
-
-                    j += 1;
-                }
-
+                // update prev
                 prev = same_suffix.back();
-                curr = next;
+                first = true;
                 
                 break;
             }
@@ -134,9 +77,52 @@ public:
         }
     }
 
+    //void next_stream_pos()
+    bool operator ++()
+    {
+        if(pq.empty())
+        {
+            curr = next;
+            process_next_block();
+
+            if( pq.empty() )
+                return false;
+        }
+
+        auto curr_occ = pq.top();
+        pq.pop();
+
+        if (!first)
+        {
+            // Compute the minimum s_lcpP of the the current and previous occurrence of the phrase in BWT_P
+            lcp_suffix = curr.suffix_length + min_s_lcp_T(*curr_occ.first, prev_occ);
+        }
+        first = false;
+
+        // update LCP, SA and BWT entries
+        update_lcp(lcp_suffix);
+
+        update_sa(curr, *curr_occ.first);
+
+        update_bwt(curr_occ.second.second);
+
+        // Update prevs
+        prev_occ = *curr_occ.first;
+
+        // Update pq
+        curr_occ.first++;
+        if (curr_occ.first != curr_occ.second.first)
+            pq.push(curr_occ);
+
+        j += 1;
+
+        return true;
+    }
+
     bool is_finished()
     {
-        return (curr.i >= pf.dict.saD.size());
+        // if the queue is empty and there are no more BWT blocks we stop
+        return ( pq.empty() and (curr.i >= pf.dict.saD.size()) );
     }
 
     size_t get_sa()
@@ -169,6 +155,7 @@ private:
     std::vector<size_t> min_s;  // Value of the minimum lcp_T in each run of BWT_T
     std::vector<size_t> pos_s;  // Position of the minimum lcp_T in each run of BWT_T
 
+    phrase_suffix_t next;
     phrase_suffix_t curr;
     phrase_suffix_t prev;
 
@@ -177,6 +164,14 @@ private:
     size_t j = 0;
     size_t sas = 0; // suffix array sample
     int_t lcpe = 0;
+
+    size_t prev_occ;
+    bool first;
+    int_t lcp_suffix;
+
+    // define the priority queue data structure
+    typedef std::pair<int_t *, std::pair<int_t *, uint8_t>> pq_t;
+    PriorityQueue<pq_t> pq;
 
     inline bool inc(phrase_suffix_t& s)
     {

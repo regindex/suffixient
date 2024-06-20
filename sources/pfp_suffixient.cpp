@@ -1,6 +1,9 @@
-#include<iostream>
+// Copyright (c) 2024, REGINDEX.  All rights reserved.
+// Use of this source code is governed
+// by a MIT license that can be found in the LICENSE file.
 
-//#define VERBOSE
+#include <iostream>
+#include <limits>
 
 #include <common.hpp>
 
@@ -13,26 +16,49 @@
 
 #include <malloc_count.h>
 
-struct lcp_maxima{
-  int64_t lcp;
-  uint64_t text_pos;
-  bool saved;
+struct lcp_maxima
+{
+  int64_t len;
+  uint64_t pos;
+  bool active;
 };
+
+constexpr int sigma = 128; 
 
 void help(){
 
   std::cout << "suffixient [options]" << std::endl <<
-  "Input: Path to PFP data structures. Output: smallest suffixient-nexessary set." << std::endl <<
+  "Input: Path to PFP data structures. Output: smallest suffixient set." << std::endl <<
   "Options:" << std::endl <<
   "-h          Print usage info." << std::endl << 
   "-i <arg>    Basepath for the PFP data structures." << std::endl << 
   "-o <arg>    Store output to file using 64-bits unsigned integers. If not specified, output is streamed to standard output in human-readable format." << std::endl <<
-  "-w <arg>    Trigger string size." << std::endl << 
+  "-w <arg>    PFP trigger string size." << std::endl << 
   "-n <arg>    Text length." << std::endl <<
-  "-s          Sort output. Default: false." << std::endl <<
   "-p          Print to standard output size of suffixient set. Default: false." << std::endl <<
   "-r          Print to standard output number of equal-letter runs in the BWT of reverse text. Default: false." << std::endl;
   exit(0);
+}
+
+inline void eval(int64_t l, uint64_t& size, std::vector<lcp_maxima>& R, 
+                 std::string output_file, FILE *suffixient_file)
+{
+  for(uint8_t c = 1; c < sigma; ++c)
+    if(l < R[c].len)
+    {
+      // process an active candidate
+      if(R[c].active)
+      {
+        size++;
+        if(output_file.length() == 0)
+          std::cout << R[c].pos << " ";
+        else
+          if (fwrite(&R[c].pos, SSABYTES, 1, suffixient_file) != 1)
+            error("S write error 1");
+      }
+      // update to inactive state
+      R[c] = {l,0,false};
+    }
 }
 
 int main(int argc, char* const argv[])
@@ -41,9 +67,9 @@ int main(int argc, char* const argv[])
 
   std::string output_file, input_path;
 
-  bool sort=false;
-  bool rho=false;
-  bool runs=false;
+  bool sort=false, chi=false, runs=false;
+
+  FILE *suffixient_file;
 
   int w, N;
 
@@ -65,14 +91,11 @@ int main(int argc, char* const argv[])
       case 'n':
         N = atoi(optarg);
       break;
-      case 's':
-        sort=true;
-      break;
       case 'p':
-        rho=true;
+        chi = true;
       break;
       case 'r':
-        runs=true;
+        runs = true;
       break;
       default:
         help();
@@ -86,111 +109,68 @@ int main(int argc, char* const argv[])
   // compute PFP iterator
   pfp_iterator iter(pf, input_path);
 
+  // opening output files
+  if(output_file.length() != 0)
+  {
+    if ((suffixient_file = fopen(output_file.c_str(), "w")) == nullptr)
+        error("open() file " + output_file + " failed");
+  }
+  else
+    std::cout << "\nSmallest suffixient set: ";
+
   /*
   * algorithm: compute suffixient-nexessary set by streaming SA, LCP, and BWT using the PFP data structures.
   */
 
-  // first index
-  uint64_t i=1;
+  // move forward pfp iterator to first position
+  uint64_t i=1; ++iter; 
   char p = iter.get_bwt(), c;
   uint64_t p_sa = iter.get_sa(), c_sa;
-  ++iter; // move forward pfp iterator by one position
-  // alphabet size
-  int sigma = 128; 
-  uint64_t bwtruns=0;
-
-  //vector with candidate suffixient right-extensions
-  std::vector<lcp_maxima> r_ext(sigma,{-1,0,true});
-  std::vector<uint64_t> suffixient;
   
-  // iterata until all values have been streamed
-  while(not iter.is_finished()){
-
-    int64_t min_lcp = -1;
+  uint64_t bwtruns=1, suffixient_size=0; //tot_size = 1;
+  int64_t m = std::numeric_limits<int64_t>::max();
+  // vector STORING candidate suffixient right-extensions
+  std::vector<lcp_maxima> r_ext(sigma,{-1,0,false});
+  
+  // iterate until all values have been streamed
+  while( ++iter )
+  {
+    // read current values from the stream
+    m = std::min(m,int64_t(iter.get_lcp()));
     c = iter.get_bwt();
     c_sa = iter.get_sa();
-    // flag marking if we have visited a run with length > 1
-    if(p == c)
+    //tot_size++;
+
+    if(c != p)
     {
-        min_lcp = iter.get_lcp();
-        ++iter; p = c; p_sa = c_sa;
-        while(not iter.is_finished() and p == iter.get_bwt())
-        {
-            c = iter.get_bwt(); c_sa = iter.get_sa();
-            min_lcp = std::min(min_lcp,int64_t(iter.get_lcp()));
-            ++iter; p = c; p_sa = c_sa;
-        }
-        c = iter.get_bwt();
-        c_sa = iter.get_sa();
-    }
-
-    //here we are either at a run border or past the end of the BWT
-
-    if(min_lcp > -1) //if we just scanned a BWT run of length > 1
-      for(uint8_t c = 1; c < sigma; ++c)
-        if(min_lcp < r_ext[c].lcp){
-
-          if(not r_ext[c].saved)
-            suffixient.push_back(r_ext[c].text_pos);
-
-          r_ext[c] = {min_lcp,0,true};
-
-        }
-
-    //BWT[i-1,i] is a BWT run
-    if(not iter.is_finished()){
-
+      // evaluate sigma candidates
+      eval(m,suffixient_size,r_ext,output_file,suffixient_file);
+      // update p and c candidates
+      if(iter.get_lcp() > r_ext[p].len) 
+        r_ext[p] = {iter.get_lcp(),N - p_sa,true};
+      if(iter.get_lcp() > r_ext[c].len) 
+        r_ext[c] = {iter.get_lcp(),N - c_sa,true};  
+      // reset LCP value
+      m = std::numeric_limits<int64_t>::max();
+      // increment number of runs
       bwtruns++;
-
-      if(int64_t(iter.get_lcp()) > r_ext[p].lcp) 
-        r_ext[p] = {int64_t(iter.get_lcp()),N - p_sa - 1,false};
-      
-      if(int64_t(iter.get_lcp()) > r_ext[c].lcp) 
-        r_ext[c] = {int64_t(iter.get_lcp()),N - c_sa - 1,false};    
-
-      for(uint8_t c = 1; c < sigma; ++c)
-        if(int64_t(iter.get_lcp()) < r_ext[c].lcp){
-
-          if(not r_ext[c].saved)
-            suffixient.push_back(r_ext[c].text_pos);
-
-          r_ext[c] = {int64_t(iter.get_lcp()),0,true};
-
-        }
-
     }
     
-    ++iter; p = c; p_sa = c_sa;
-
+    // update the previous BWT character and SA entry
+    p = c; p_sa = c_sa;
   }
+  // evaluate last active candidates
+  eval(-1,suffixient_size,r_ext,output_file,suffixient_file);
 
-  //save residuals right-extensions
-  for(uint8_t c = 1; c < sigma; ++c){
-
-    if(not r_ext[c].saved)
-      suffixient.push_back(r_ext[c].text_pos);
-
-  } 
-
-  if(sort) std::sort(suffixient.begin(),suffixient.end());
-
-  std::cout << "\nSmallest suffixient set: ";
-  if(output_file.length()==0){
-
-      for(auto x:suffixient) std::cout << x << " ";
+  if(output_file.length() == 0)
       std::cout << std::endl;
+  else
+      fclose(suffixient_file);
 
-  }else{
-
-      uint64_t size = suffixient.size();
-      std::ofstream ofs(output_file, std::ios::binary);
-      ofs.write((char*)&size, sizeof(size));
-      ofs.write((char*)suffixient.data(), sizeof(uint64_t)*size);
-    
-  }
-
-  std::cout << "Size of smallest suffixient set: " << suffixient.size() << std::endl;
-  std::cout << "Number of equal-letter BWT(rev(T)) runs: " << bwtruns << std::endl;
+  if(chi)
+    std::cout << "Size of smallest suffixient set: " << suffixient_size << std::endl;
+  if(runs)
+    std::cout << "Number of equal-letter runs: " << bwtruns << std::endl;
   
   return 0;
 }
