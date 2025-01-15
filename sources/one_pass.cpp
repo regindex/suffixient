@@ -15,6 +15,8 @@ int_vector<8> T;
 int_vector_buffer<> SA;
 int_vector_buffer<> LCP;
 
+#define STORE_SIZE 5
+
 inline uint8_t BWT(uint64_t i){
 	return SA[i] == 0 ? 0 : T[SA[i] - 1];
 }
@@ -22,6 +24,7 @@ inline uint8_t BWT(uint64_t i){
 struct lcp_maxima{
 	int64_t len;
 	uint64_t pos;
+	int64_t lcs;
 	bool active;
 };
 
@@ -40,16 +43,31 @@ void help(){
 	exit(0);
 } 
 
-inline void eval(uint64_t sigma, int64_t m, vector<lcp_maxima>& R, vector<uint64_t>& S)
+vector<uint64_t> last(128,0);
+vector<uint64_t> average(128,0);
+vector<uint64_t> inserted(128,0);
+
+inline void eval(uint64_t sigma, int64_t m, vector<lcp_maxima>& R, 
+								 					vector<uint64_t>& S, vector<int64_t>& L)
 {
 	for(uint8_t c = 1; c < sigma; ++c)
 	  if(m < R[c].len)
 		  {
 		    // process an active candidate
 		    if(R[c].active)
+		    {
 		    	S.push_back(R[c].pos);
+		    	average[c] += R[c].lcs; inserted[c] += 1;
+		    	//if(char(c) == 'A')
+		    		//std::cout << R[c].lcs << " ";
+		    	//
+		    	if(R[c].lcs > L[c] and m != -1){ L[c] = R[c].lcs; if(char(c) == 'A' and L[c] == 33333){ std::cout << last[c] << " " << R[c].pos << std::endl; } }
+		    	last[c] = R[c].pos;
+		    }
+		  	// evaluate LCS values
+		  	// if(R[c].len > L[c]){ L[c] = R[c].len; }
 		    // update to inactive state
-		    R[c] = {m,0,false};
+		    R[c] = {m,0,m,false};
 		  }
 }
 
@@ -136,7 +154,8 @@ int main(int argc, char** argv){
 		LCP = int_vector_buffer<>(cache_file_name(conf::KEY_LCP, cc));
 	}
 
-	vector<lcp_maxima> R(sigma,{-1,0,false}); //vector with candidate suffixient right-extensions
+	vector<lcp_maxima> R(sigma,{-1,0,0,false}); //vector with candidate suffixient right-extensions
+	vector<int64_t> L(sigma,-1); // vector containing the LCS values
 	vector<uint64_t> S;
 
 	for(uint64_t i=1;i<N;++i)
@@ -145,11 +164,11 @@ int main(int argc, char** argv){
 
 		if(BWT(i) != BWT(i-1))
 		{
-			eval(sigma,m,R,S);
+			eval(sigma,m,R,S,L);
 
 			for(uint64_t ip = i-1; ip < i+1; ++ip)
 				if(int64_t(LCP[i]) > R[BWT(ip)].len)
-					R[BWT(ip)] = {int64_t(LCP[i]),N - SA[ip],true}; 
+					R[BWT(ip)] = {int64_t(LCP[i]),N - SA[ip],R[BWT(ip)].lcs,true}; 
       // reset LCP value
       m = std::numeric_limits<int64_t>::max();
       // increment number of runs
@@ -158,27 +177,32 @@ int main(int argc, char** argv){
 	}
 
   // evaluate last active candidates
-  eval(sigma,-1,R,S);
+  eval(sigma,-1,R,S,L);
 
   // remove chached files
-  sdsl::remove(cache_file_name(conf::KEY_TEXT, cc));
-  sdsl::remove(cache_file_name(conf::KEY_SA, cc));
+  sdsl::remove(cache_file_name(conf::KEY_TEXT,cc));
+  sdsl::remove(cache_file_name(conf::KEY_SA,  cc));
   sdsl::remove(cache_file_name(conf::KEY_ISA, cc));
   sdsl::remove(cache_file_name(conf::KEY_LCP, cc));
 
   if(sort) std::sort(S.begin(),S.end());
 
   if(output_file.length()==0){
-    for(auto x:S) cout << x << " ";
-    cout << endl;
+    //for(auto x:S) cout << x << " ";
+    //cout << endl;
   }
   else{
-    uint64_t size = S.size();
     ofstream ofs(output_file, ios::binary);
-    ofs.write((char*)&size, sizeof(size));
-    ofs.write((char*)S.data(), sizeof(uint64_t)*size);
+    for (const auto& x : S) { ofs.write(reinterpret_cast<const char*>(&x), STORE_SIZE); }
+    ofs.close();
   }
 
   if(rho) cout << "Size of smallest suffixient set: " << S.size() << endl;
   if(runs) cout << "Number of equal-letter BWT(rev(T)) runs: " << bwtruns << endl;
+
+  for(int i=0;i<sigma;++i)
+  {
+  	if(L[i] != -1)
+  		std::cout << char(i) << " = " << L[i]+1 << " avg: " << double(average[i])/inserted[i] << std::endl;
+  }
 }

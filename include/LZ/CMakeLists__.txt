@@ -1,0 +1,20 @@
+# Assuming your current CMakeLists.txt for the LZ directory
+
+# List of source files for the LZ target
+set(LZ_SOURCES 
+    #${CMAKE_SOURCE_DIR}/index/build_index.cpp
+    # src/other_source.cpp
+    # Add other source files as needed
+    ${CMAKE_SOURCE_DIR}/include/LZ/lz77index/build_index.cpp
+)
+
+message(STATUS "CMAKE_SOURCE_DIR: ${CMAKE_SOURCE_DIR}")
+
+# Define the target for LZ
+add_executable(LZ ${LZ_SOURCES})  # Replace ${LZ_SOURCES} with your source files for LZ
+
+# Assuming you're defining a target named LZ, and want to link it with the libraries in 'lib'
+target_include_directories(LZ PUBLIC ${CMAKE_SOURCE_DIR}/include/LZ/lz77index/includes)
+
+# If there is a library that needs linking, use target_link_libraries to link to it
+target_link_libraries(LZ PUBLIC ${CMAKE_SOURCE_DIR}/include/LZ/lz77index/lib/liblz77.a)
