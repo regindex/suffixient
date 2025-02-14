@@ -2,8 +2,10 @@
 # Compiler configuration
 # ##############################################################################
 
+set(CMAKE_C_STANDARD 11)      # For C files
+set(CMAKE_CXX_STANDARD 14)    # For C++ files
+
 # Add the basic compiler options
-add_compile_options("-std=c++14")
 # add_compile_options("-Werror")
 add_compile_options("-Wall")
 add_compile_options("-Wextra")
