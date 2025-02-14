@@ -28,7 +28,7 @@ struct lcp_maxima{
 void help(){
 
 	cout << "suffixient [options]" << endl <<
-	"Input: non-empty ASCII file without character 0x0, from standard input. Output: smallest suffixient-nexessary set." << endl <<
+	"Input: non-empty ASCII file without character 0x0, from standard input. Output: smallest suffixient set." << endl <<
 	"Warning: if 0x0 appears, the standard input is read only until the first occurrence of 0x0 (excluded)." << endl <<
 	"Options:" << endl <<
 	"-h          Print usage info." << endl << 
