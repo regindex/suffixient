@@ -9,7 +9,7 @@ This software computes the smallest suffixient set of a text T.
 ### Install
 
 ~~~~
-git clone https://github.com/nicolaprezza/suffixient
+git clone https://github.com/regindex/suffixient
 cd suffixient
 mkdir build
 cd build
