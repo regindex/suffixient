@@ -33,7 +33,7 @@ void help(){
   "-h          Print usage info." << std::endl << 
   "-i <arg>    Basepath for the PFP data structures." << std::endl << 
   "-o <arg>    Store output to file using 64-bits unsigned integers. If not specified, output is streamed to standard output in human-readable format." << std::endl <<
-  "-w <arg>    PFP trigger string size." << std::endl << 
+  "-w <arg>    PFP trigger strings size." << std::endl << 
   "-n <arg>    Text length." << std::endl <<
   "-p          Print to standard output size of suffixient set. Default: false." << std::endl <<
   "-r          Print to standard output number of equal-letter runs in the BWT of reverse text. Default: false." << std::endl;

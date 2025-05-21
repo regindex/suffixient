@@ -4,7 +4,7 @@
 
 Let $T[1..n]$ be a text. A set $`S \subseteq \{1,\dots,n\}`$ is $suffixient$ if, for any one-character extension $X\cdot a$ (string $X$ concatenated with character $a$) of any right-maximal substring $X$ of $T$, there exists $i \in S$ such that $X\cdot a$ is a suffix of $T[1..i]$.
 
-This software computes the smallest suffixient set of a text T.
+This software computes a smallest suffixient set of a text T.
 
 ### Install
 
@@ -53,9 +53,9 @@ Type
 sources/suffixient -h
 ~~~~
 
-for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r). Type "sources/suffixient_twopass for using the two pass linear algorithm".
+for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r). Type sources/one_pass or sources/fm for using two variants of the linear time algorithm".
 
-Otherwise, you can run the smallest suffixient set construction for large repetitive texts using the PFP algorithm by typing the following command (note that at the moment you need to explicitly invert the text before running the PFP by typing -i flag).
+Otherwise, you can run the smallest suffixient set construction for large repetitive texts using the PFP algorithm by typing the following command (note that in this software version you need to explicitly invert the text before running the PFP by using the -i flag).
 
 ~~~~
 python3 pfp_suffixient.py -i text.txt

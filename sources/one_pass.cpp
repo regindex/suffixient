@@ -36,7 +36,7 @@ void help(){
 	"-s          Sort output. Default: false." << endl <<
 	"-p          Print to standard output size of suffixient set. Default: false." << endl <<
 	"-r          Print to standard output number of equal-letter runs in the BWT of reverse text. Default: false." << endl <<
-	"-t          Use alphabet of size sigma (debug only). Default: false." << endl;
+	"-t          Map characters to integers in the range 1,2,...,sigma. Default: false." << endl;
 	exit(0);
 } 
 
@@ -62,7 +62,7 @@ int main(int argc, char** argv){
 	bool sort = false;
 	bool rho = false;
 	bool runs = false;
-	bool debug = false;
+	bool remap = false;
 
 	int opt;
 	while ((opt = getopt(argc, argv, "prshto:")) != -1){
@@ -83,7 +83,7 @@ int main(int argc, char** argv){
 				runs=true;
 			break;
 			case 't':
-				debug=true;
+				remap=true;
 			break;
 			default:
 				help();
@@ -111,7 +111,7 @@ int main(int argc, char** argv){
 
 		vector<uint8_t> char_to_int(256, 0); //map chars to 0...sigma-1. 0 is reserved for term.
 
-		if(debug)
+		if(not remap)
 		{
 			for(uint64_t i = 0; i < N - 1; ++i)
 			{
