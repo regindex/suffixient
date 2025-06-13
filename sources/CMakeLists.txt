@@ -11,5 +11,8 @@ target_link_libraries(one-pass common sdsl divsufsort divsufsort64)
 add_executable(suffixient linear_time.cpp)
 target_link_libraries(suffixient common sdsl divsufsort divsufsort64)
 
+add_executable(suffixiency_test test.cpp)
+target_link_libraries(suffixiency_test common sdsl divsufsort divsufsort64)
+
 #add_executable(stats stats.cpp)
 #target_link_libraries(suffixient common sdsl divsufsort divsufsort64)
