@@ -25,13 +25,10 @@ inline uint8_t BWT(uint64_t i){
 
 void help(){
 
-  cout << "suffixient [options]" << endl <<
-  "Input: non-empty ASCII file without character 0x0, from standard input. Output: smallest suffixient-nexessary set." << endl <<
-  "Warning: if 0x0 appears, the standard input is read only until the first occurrence of 0x0 (excluded)." << endl <<
-  "Options:" << endl <<
-  "-h          Print usage info." << endl << 
-  "-i          input file suffixient set." << endl << 
-  "-o <arg>    The file containing the set being tested." << endl;
+  cout << "Test usage: ./test input_file input_set" << endl <<
+  "input_file: the filename for a non-empty ASCII file without character 0x0." << endl <<
+  "input_set: the filename for a file containing the set being tested. Every entry in the file is assumed to be uint64_t." << endl <<
+  "Warning: if 0x0 appears within the file, the file is read only until the first occurrence of 0x0 (excluded)." << endl;
   exit(0);
 }
 
@@ -171,37 +168,34 @@ void sv(vector<int64_t> LCP, vector<int64_t> & psv, vector<int64_t> & nsv) {
 int main(int argc, char** argv){
   srand(time(NULL));
   cache_config cc;
-  string input_file;
+  string input_file, input_set, in;
 
-  int opt;
-  while ((opt = getopt(argc, argv, "prshto:")) != -1){
-    switch (opt){
-      case 'h':
-        help();
-      break;
-      case 'o':
-        input_file = string(optarg);
-      break;
-      default:
-        help();
-      return -1;
-    }
+  if (argc == 3) {
+    input_file = argv[1];
+    input_set = argv[2];
+  }
+  else {
+    help();
+    return -1;
   }
 
   vector<uint64_t> S;
   uint64_t N = 0;
-  ifstream file(input_file);
+  ifstream set_file(input_set);
   string line;
-  if (file.is_open()) {
+  if (set_file.is_open()) {
     uint64_t size;
-    file.read(reinterpret_cast<char*>(&size), sizeof(size));
+    set_file.read(reinterpret_cast<char*>(&size), sizeof(size));
     S.resize(size);
-    file.read(reinterpret_cast<char*>(S.data()), sizeof(uint64_t)*size);
+    set_file.read(reinterpret_cast<char*>(S.data()), sizeof(uint64_t)*size);
+    set_file.close();
+  }
+
+  ifstream file(input_file);
+  if (file.is_open()) {
+    getline(file, in, char(0));
     file.close();
   }
-  string in;
-
-  getline(cin,in,char(0));
 
   N = in.size() + 1;
   uint8_t sigma = 1; 
