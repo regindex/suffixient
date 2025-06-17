@@ -67,6 +67,12 @@ for the full list of options, type
 python3 pfp_suffixient -h
 ~~~~
 
+The suffixiency test receives the filename for a file containing the input text and the filename for a file containing the set being tested, which is assumed to be written as following: one uint64_t storing the size $|S|$ of the set, followed by $|S|$ uint64_t storing the set itself. Then, if input_file is the filename for the input text and input_set is the filename for the set being tested the test can be executed as:
+
+~~~~
+./test input_file input_set
+~~~~
+
 ### Funding
 
 This project has received funding from the European Research Council (ERC) under the European Union’s Horizon Europe research and innovation programme, project REGINDEX, grant agreement No. 101039208.
