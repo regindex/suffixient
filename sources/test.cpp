@@ -24,10 +24,9 @@ inline uint8_t BWT(uint64_t i){
 
 
 void help(){
-
   cout << "Test usage: ./test input_file input_set" << endl <<
   "input_file: the filename for a non-empty ASCII file without character 0x0." << endl <<
-  "input_set: the filename for a file containing the set being tested. Every entry in the file is assumed to be uint64_t." << endl <<
+  "input_set: the filename for a file containing the set being tested in the following format: one uint64_t storing the size |S| of the set, followed by |S| uint64_t storing the set itself." << endl <<
   "Warning: if 0x0 appears within the file, the file is read only until the first occurrence of 0x0 (excluded)." << endl;
   exit(0);
 }
