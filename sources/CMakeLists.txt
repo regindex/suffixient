@@ -14,5 +14,14 @@ target_link_libraries(suffixient common sdsl divsufsort divsufsort64)
 add_executable(suffixiency_test test.cpp)
 target_link_libraries(suffixiency_test common sdsl divsufsort divsufsort64)
 
+add_executable(fm fm.cpp)
+target_link_libraries(fm common sdsl divsufsort divsufsort64)
+
+add_executable(plc plain_lc.cpp)
+target_link_libraries(plc common sdsl divsufsort divsufsort64)
+
+add_executable(lc lc.cpp)
+target_link_libraries(lc common sdsl divsufsort divsufsort64)
+
 #add_executable(stats stats.cpp)
 #target_link_libraries(suffixient common sdsl divsufsort divsufsort64)
