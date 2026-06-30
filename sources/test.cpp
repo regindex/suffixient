@@ -24,6 +24,7 @@ inline uint8_t BWT(uint64_t i){
 
 
 void help(){
+
   cout << "Test usage: ./test input_file input_set" << endl <<
   "input_file: the filename for a non-empty ASCII file without character 0x0." << endl <<
   "input_set: the filename for a file containing the set being tested in the following format: one uint64_t storing the size |S| of the set, followed by |S| uint64_t storing the set itself." << endl <<
@@ -59,43 +60,17 @@ inline uint64_t argmax(vector <int64_t> & LCP, uint64_t i, uint64_t j) {
   }
 }
 
-inline vector<uint64_t> compute_LPR(vector <int64_t> & LCP) {
-  vector <uint64_t> LPR(LCP.size(), 0);
-  vector <uint64_t> APR(LCP.size(), 0);
-  vector <uint64_t> BPR(LCP.size(), 0);
-  for(uint64_t i = 1; i < LCP.size(); i++) {
-    if(BWT(i) != BWT(i - 1)) {
-      BPR[i] = i;
-    }
-    else {
-      BPR[i] = argmin(LCP, BPR[i - 1], i);
-    }
-  }
-  for(int64_t j = LCP.size() - 2; j >= 0; j--) {
-    if(BWT(j) != BWT(j + 1)) {
-      APR[j] = j + 1;
-    }
-    else {
-      APR[j] = argmin(LCP, j + 1, APR[j + 1]);
-    }
-  }
-  for (uint64_t i = 0; i < LCP.size(); i++) {
-    LPR[i] = argmax(LCP, APR[i], BPR[i]);
-  }
-  return LPR;
-
-}
-
 
 vector<vector<uint64_t>> classify_by_bwt_symbol(vector<uint64_t> & S, uint64_t N,\
   vector<int64_t> & LCP, uint8_t sigma) {
   vector<vector<uint64_t>> classified;
-  vector<uint64_t> LPR = compute_LPR(LCP);
+
   for (uint64_t i = 0; i < sigma; i++) {
     classified.push_back(vector<uint64_t> ());
   }
   for (auto element:S) {
-    classified[BWT(element)].push_back(LPR[element]);
+
+    classified[BWT(element)].push_back(argmax(LCP, element, min(element + 1, N - 1)));
   }
   return classified;
 }
@@ -108,17 +83,18 @@ bool suffixiency(vector<vector<uint64_t>> C, uint64_t N, vector<int64_t> & PSV, 
   for (uint64_t i = 1; i < N; i++) {
     if (BWT(i - 1) != BWT(i)) {
       for (uint64_t ip = i - 1; ip <= i; ip++) {
-        if (BWT(ip) != 0) {
-          if (C[BWT(ip)].empty()) {
+        uint64_t c = BWT(ip);
+        if (c != 0) {
+          if (C[c].empty()) {
             return false;
           }
-          while (int64_t(C[BWT(ip)][P[BWT(ip)]]) <= PSV[i]) {
-            if (P[BWT(ip)] == C[BWT(ip)].size() - 1) {
+          while (int64_t(C[c][P[c]]) <= PSV[i]) {
+            if (P[c] == C[c].size() - 1) {
               return false;
             }
-            P[BWT(ip)]++;
+            P[c]++;
           }
-            if (NSV[i] <= C[BWT(ip)][P[BWT(ip)]]) {
+            if (NSV[i] <= C[c][P[c]]) {
               return false;
             }
         }
@@ -234,6 +210,7 @@ int main(int argc, char** argv){
   vector<uint64_t> A = map_to_BWT(S, ISA, N);
   std::sort(A.begin(), A.end());
   vector<vector<uint64_t>> C = classify_by_bwt_symbol(A, N, LCP, sigma);
+
 
   if (!suffixiency(C, N, PSV, NSV, sigma)) {
     cerr << "The given set is not suffixient." << endl;
