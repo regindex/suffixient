@@ -17,8 +17,8 @@ target_link_libraries(test common sdsl divsufsort divsufsort64)
 add_executable(fm fm.cpp)
 target_link_libraries(fm common sdsl divsufsort divsufsort64)
 
-add_executable(plc plain_lc.cpp)
-target_link_libraries(plc common sdsl divsufsort divsufsort64)
+add_executable(plain_lc plain_lc.cpp)
+target_link_libraries(plain_lc common sdsl divsufsort divsufsort64)
 
 add_executable(lc lc.cpp)
 target_link_libraries(lc common sdsl divsufsort divsufsort64)
