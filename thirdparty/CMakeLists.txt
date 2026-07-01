@@ -3,7 +3,7 @@ include(FetchContent)
 ## Add zlib
 FetchContent_Declare(
   zlib
-  URL https://zlib.net/zlib-1.3.1.tar.gz
+  URL https://zlib.net/current/zlib.tar.gz
 )
 #FetchContent_MakeAvailable(zlib)
 FetchContent_GetProperties(zlib)
