@@ -8,6 +8,8 @@ This software computes a smallest suffixient set of a text T.
 
 ### Install
 
+To compile the whole project (only Linux), run the following:
+
 ~~~~
 git clone https://github.com/regindex/suffixient
 cd suffixient
@@ -16,6 +18,15 @@ cd build
 cmake ..
 make
 ~~~~
+
+To compile individually each "file" in the folder "sources" (with the exception of pfp_suffixient.cpp and stats.cpp), run the following (macOS and Linux):
+
+~~~~
+cd sources
+g++ file.cpp -I ~/include/ -L ~/lib/ -lsdsl -ldivsufsort -ldivsufsort64 -o file
+~~~~
+
+which creates an executable "file".
 
 ### Run
 
@@ -53,7 +64,7 @@ Type
 sources/suffixient -h
 ~~~~
 
-for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r). Type sources/one_pass or sources/fm for using two variants of the linear time algorithm".
+for more options. The tool allows also sorting the output (option -s) and printing the size of the smallest suffixient set (option -p) and the number of runs in the BWT of the reverse text (option -r). Type sources/one_pass, sources/lc, sources/plain_lc, or sources/fm for using other variants of the linear time algorithm.
 
 Otherwise, you can run the smallest suffixient set construction for large repetitive texts using the PFP algorithm by typing the following command (note that in this software version you need to explicitly invert the text before running the PFP by using the -i flag).
 
