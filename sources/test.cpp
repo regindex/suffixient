@@ -42,24 +42,14 @@ inline vector<uint64_t> map_to_BWT(vector<uint64_t> & S, vector<uint64_t> & ISA,
   return mapped;
 }
 
-inline uint64_t argmin(vector <int64_t> & LCP, uint64_t i, uint64_t j) {
-  if (LCP[i] < LCP[j]) {
-    return i;
-  }
-  else {
-    return j;
-  }
-}
-
-inline uint64_t argmax(vector <int64_t> & LCP, uint64_t i, uint64_t j) {
-  if (LCP[i] <= LCP[j]) {
-    return j;
+inline uint64_t i_max(vector<int64_t> & LCP, uint64_t i) {
+  if (i < (LCP.size() - 1) and LCP[i] <= LCP[i + 1]) {
+    return (i + 1);
   }
   else {
     return i;
   }
 }
-
 
 vector<vector<uint64_t>> classify_by_bwt_symbol(vector<uint64_t> & S, uint64_t N,\
   vector<int64_t> & LCP, uint8_t sigma) {
@@ -69,8 +59,7 @@ vector<vector<uint64_t>> classify_by_bwt_symbol(vector<uint64_t> & S, uint64_t N
     classified.push_back(vector<uint64_t> ());
   }
   for (auto element:S) {
-
-    classified[BWT(element)].push_back(argmax(LCP, element, min(element + 1, N - 1)));
+    classified[BWT(element)].push_back(i_max(LCP, element));
   }
   return classified;
 }
@@ -94,9 +83,9 @@ bool suffixiency(vector<vector<uint64_t>> C, uint64_t N, vector<int64_t> & PSV, 
             }
             P[c]++;
           }
-            if (NSV[i] <= C[c][P[c]]) {
-              return false;
-            }
+          if (NSV[i] <= C[c][P[c]]) {
+            return false;
+          }
         }
       }
     }
@@ -138,7 +127,6 @@ void sv(vector<int64_t> LCP, vector<int64_t> & psv, vector<int64_t> & nsv) {
     stack_psv.push_back(i);
   }
 }
-
 
 int main(int argc, char** argv){
   srand(time(NULL));
@@ -193,8 +181,8 @@ int main(int argc, char** argv){
   LCP_ = int_vector_buffer<>(cache_file_name(conf::KEY_LCP, cc));
 
   // insert LCP array in a C++ vector
-  std::vector<int64_t> LCP(N + 1,-1);
-  for(uint64_t i=0;i<=N;++i)
+  std::vector<int64_t> LCP(N + 1, 0);
+  for(uint64_t i=0;i<N;++i)
     LCP[i] = LCP_[i];
 
   vector<int64_t> NSV, PSV;
@@ -231,4 +219,3 @@ int main(int argc, char** argv){
 
   return 0;
 }
-
